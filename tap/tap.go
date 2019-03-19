@@ -1,5 +1,9 @@
 package tap
 
+import (
+	"sort"
+)
+
 // RunReport is a description of the overall result of a test program.
 //
 // If the reader that produced a report returned an error then the report for
@@ -23,6 +27,36 @@ type Plan struct {
 	Min, Max int
 }
 
+func (p *Plan) Valid() bool {
+	if p == nil {
+		return false
+	}
+	return p.Min > 0 && p.Max >= p.Min
+}
+
+func (p *Plan) check(results map[int]*Report) *Inconsistent {
+	var ret Inconsistent
+	for _, report := range results {
+		if report.Num < p.Min || report.Num > p.Max {
+			ret.Extra = append(ret.Extra, report.Num)
+		}
+	}
+	if p.Max >= p.Min {
+		for num := p.Min; num <= p.Max; num++ {
+			if _, exists := results[num]; !exists {
+				ret.Missing = append(ret.Missing, num)
+			}
+		}
+	}
+
+	sort.Ints(ret.Missing)
+	sort.Ints(ret.Extra)
+	if len(ret.Missing) > 0 || len(ret.Extra) > 0 {
+		return &ret
+	}
+	return nil
+}
+
 // Report describes the outcome for one test.
 type Report struct {
 	// Num is the test number this result belongs to.
@@ -30,6 +64,9 @@ type Report struct {
 
 	// Result describes the passing status for the test.
 	Result Result
+
+	// Name is the name given for the test, if any.
+	Name string
 
 	// Todo is set if the test program marked this particular test as a Todo
 	// test, meaning that failures are expected. If Todo is set then the Result
