@@ -15,6 +15,7 @@ func TestReader(t *testing.T) {
 	}{
 		"empty": {
 			Input:   ``,
+			Want:    &RunReport{},
 			WantErr: `no tests`,
 		},
 		"anonymous test success with no plan": {
@@ -71,8 +72,84 @@ func TestReader(t *testing.T) {
 			},
 		},
 		"bail out after one test with no plan": {
-			Input:   "ok 1 boop\nBail out! Database not available",
+			Input: "ok 1 boop\nBail out! Database not available",
+			Want: &RunReport{
+				Tests: []*Report{
+					{
+						Num:    1,
+						Result: Pass,
+						Name:   "boop",
+					},
+				},
+			},
 			WantErr: `testing aborted: Database not available`,
+		},
+		"one test, planned before": {
+			Input: "1..1\nok 1",
+			Want: &RunReport{
+				Plan: &Plan{Min: 1, Max: 1},
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+				},
+			},
+		},
+		"one test, planned after": {
+			Input: "ok 1\n1..1",
+			Want: &RunReport{
+				Plan: &Plan{Min: 1, Max: 1},
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+				},
+			},
+		},
+		"planned two but reported only one": {
+			Input: "1..2\nok 1",
+			Want: &RunReport{
+				Plan: &Plan{Min: 1, Max: 2},
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+					nil,
+				},
+			},
+			WantErr: `no result for 2`,
+		},
+		"planned one but reported two": {
+			Input: "1..1\nok 1\nok 2",
+			Want: &RunReport{
+				Plan: &Plan{Min: 1, Max: 1},
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+				},
+			},
+			WantErr: `unexpected extra result for 2`,
+		},
+		"planned five but reported only one": {
+			Input: "1..5\nok 1",
+			Want: &RunReport{
+				Plan: &Plan{Min: 1, Max: 5},
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+					nil,
+					nil,
+					nil,
+					nil,
+				},
+			},
+			WantErr: `no result for 2-5`,
+		},
+		"planned five but reported only two, non-contiguous": {
+			Input: "1..5\nok 1\nok 3",
+			Want: &RunReport{
+				Plan: &Plan{Min: 1, Max: 5},
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+					nil,
+					{Num: 3, Result: Pass},
+					nil,
+					nil,
+				},
+			},
+			WantErr: `no result for 2, 4-5`,
 		},
 	}
 
@@ -89,7 +166,6 @@ func TestReader(t *testing.T) {
 				if got, want := err.Error(), test.WantErr; got != want {
 					t.Fatalf("unexpected error\ngot:  %s\nwant: %s", got, want)
 				}
-				return
 			}
 
 			if !cmp.Equal(got, test.Want) {

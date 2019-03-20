@@ -54,16 +54,16 @@ func ranges(nums []int) string {
 			start = num
 			end = num
 		} else if num == end+1 {
+			end = num
 			continue // keep looking for an end
 		} else {
-			if start != 0 {
-				if seen {
-					buf.WriteString(", ")
-				}
-				buf.WriteString(rangeStr(start, end))
-				start = 0
-				end = 0
+			if seen {
+				buf.WriteString(", ")
 			}
+			buf.WriteString(rangeStr(start, end))
+			start = num
+			end = num
+			seen = true
 		}
 	}
 	if start != 0 {

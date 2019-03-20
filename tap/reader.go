@@ -92,7 +92,12 @@ func (r *Reader) Read() *Report {
 				return nil
 			}
 		} else if match := planPattern.FindSubmatch(line); match != nil {
-
+			min64, _ := strconv.ParseInt(string(match[1]), 10, 0)
+			max64, _ := strconv.ParseInt(string(match[2]), 10, 0)
+			r.plan = &Plan{
+				Min: int(min64),
+				Max: int(max64),
+			}
 		}
 	}
 	if len(r.results) == 0 {
