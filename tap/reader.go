@@ -9,7 +9,7 @@ import (
 )
 
 var planPattern = regexp.MustCompile(`^(\d+)\.\.(\d+)$`)
-var reportPattern = regexp.MustCompile(`^(?i)(ok|not ok|Bail out!)(?:\s+((\d*)(.*)(?:\s+# ((todo|skip|).*)?)))$`)
+var reportPattern = regexp.MustCompile(`^(?i)(ok|not ok|Bail out!)(?:\s+((\d*)\s*(.*?)(?:\s+# ((todo|skip|).*))?))?$`)
 
 // Read is a convenience wrapper around constructing a Reader, reading all of
 // its results, and constructing a report. A caller that doesn't need streaming
@@ -41,6 +41,7 @@ func NewReader(r io.Reader) *Reader {
 		sc: sc,
 
 		nextNum: 1,
+		results: make(map[int]*Report),
 	}
 }
 
@@ -124,7 +125,7 @@ func (r *Reader) Report() *RunReport {
 
 	// If we got no explicit plan then we'll create a synthetic one just to
 	// get this done.
-	if plan != nil {
+	if plan == nil {
 		plan = &Plan{
 			Min: 1,
 			Max: 0,
@@ -146,6 +147,7 @@ func (r *Reader) Report() *RunReport {
 			}
 			i++
 		}
+		ret.Tests = tests
 	}
 	return &ret
 }

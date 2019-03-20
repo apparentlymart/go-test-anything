@@ -17,9 +17,62 @@ func TestReader(t *testing.T) {
 			Input:   ``,
 			WantErr: `no tests`,
 		},
-		"anonymous test with no plan": {
+		"anonymous test success with no plan": {
 			Input: `ok`,
-			Want:  &RunReport{},
+			Want: &RunReport{
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+				},
+			},
+		},
+		"two anonymous test successes with no plan": {
+			Input: "ok\nok",
+			Want: &RunReport{
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+					{Num: 2, Result: Pass},
+				},
+			},
+		},
+		"two anonymous tests, second failing, with no plan": {
+			Input: "ok\nnot ok",
+			Want: &RunReport{
+				Tests: []*Report{
+					{Num: 1, Result: Pass},
+					{Num: 2, Result: Fail},
+				},
+			},
+		},
+		"one skipped test with no plan": {
+			Input: "ok 1 thingy # skipped because no server is available",
+			Want: &RunReport{
+				Tests: []*Report{
+					{
+						Num:        1,
+						Result:     Skip,
+						Name:       "thingy",
+						SkipReason: "skipped because no server is available",
+					},
+				},
+			},
+		},
+		"one todo test with no plan": {
+			Input: "not ok 1 wotsit # TODO: implement",
+			Want: &RunReport{
+				Tests: []*Report{
+					{
+						Num:        1,
+						Result:     Fail,
+						Name:       "wotsit",
+						Todo:       true,
+						TodoReason: "TODO: implement",
+					},
+				},
+			},
+		},
+		"bail out after one test with no plan": {
+			Input:   "ok 1 boop\nBail out! Database not available",
+			WantErr: `testing aborted: Database not available`,
 		},
 	}
 
