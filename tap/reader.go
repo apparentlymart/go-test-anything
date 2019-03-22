@@ -9,7 +9,7 @@ import (
 )
 
 var planPattern = regexp.MustCompile(`^(\d+)\.\.(\d+)$`)
-var reportPattern = regexp.MustCompile(`^(?i)(ok|not ok|Bail out!)(?:\s+((\d*)\s*(.*?)(?:\s+# ((todo|skip|).*))?))?$`)
+var reportPattern = regexp.MustCompile(`^(?i)(ok|not ok|Bail out!)(?:\s+((\d*)\s*(.*?)(?:\s+# (todo|skip|)\S*\s*(.*))?))?$`)
 
 // Read is a convenience wrapper around constructing a Reader, reading all of
 // its results, and constructing a report. A caller that doesn't need streaming
@@ -75,13 +75,13 @@ func (r *Reader) Read() *Report {
 				if prefix == "ok" {
 					report.Result = Pass
 				}
-				switch strings.ToLower(string(match[6])) {
+				switch strings.ToLower(string(match[5])) {
 				case "skip":
 					report.Result = Skip
-					report.SkipReason = string(match[5])
+					report.SkipReason = string(match[6])
 				case "todo":
 					report.Todo = true
-					report.TodoReason = string(match[5])
+					report.TodoReason = string(match[6])
 				}
 
 				r.results[num] = report

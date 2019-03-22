@@ -45,14 +45,14 @@ func TestReader(t *testing.T) {
 			},
 		},
 		"one skipped test with no plan": {
-			Input: "ok 1 thingy # skipped because no server is available",
+			Input: "ok 1 thingy # skipped no server is available",
 			Want: &RunReport{
 				Tests: []*Report{
 					{
 						Num:        1,
 						Result:     Skip,
 						Name:       "thingy",
-						SkipReason: "skipped because no server is available",
+						SkipReason: "no server is available",
 					},
 				},
 			},
@@ -66,7 +66,7 @@ func TestReader(t *testing.T) {
 						Result:     Fail,
 						Name:       "wotsit",
 						Todo:       true,
-						TodoReason: "TODO: implement",
+						TodoReason: "implement",
 					},
 				},
 			},
