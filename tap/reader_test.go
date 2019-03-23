@@ -44,6 +44,22 @@ func TestReader(t *testing.T) {
 				},
 			},
 		},
+		"two anonymous tests, one with diagnostics": {
+			Input: "# Got output:\n#     foo\nok\nok",
+			Want: &RunReport{
+				Tests: []*Report{
+					{
+						Num:    1,
+						Result: Pass,
+						Diagnostics: []string{
+							"Got output:",
+							"    foo",
+						},
+					},
+					{Num: 2, Result: Pass},
+				},
+			},
+		},
 		"one skipped test with no plan": {
 			Input: "ok 1 thingy # skipped no server is available",
 			Want: &RunReport{

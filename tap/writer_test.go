@@ -118,6 +118,20 @@ func TestWriter(t *testing.T) {
 			},
 			"ok 1 reticulates splines\nnot ok 2 boops\n",
 		},
+		"diagnostic lines": {
+			func(w *Writer) error {
+				return w.Report(&Report{
+					Num:    1,
+					Name:   "reticulates splines",
+					Result: Pass,
+					Diagnostics: []string{
+						"Got:  'foo'",
+						"Want: 'bar'",
+					},
+				})
+			},
+			"# Got:  'foo'\n# Want: 'bar'\nok 1 reticulates splines\n",
+		},
 		"skipped test with no reason": {
 			func(w *Writer) error {
 				return w.Report(&Report{
